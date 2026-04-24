@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Dashboard — Store #214</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e7eb;padding:20px;font-family:sans-serif}
+.wrap{display:flex;min-height:900px;background:#1a1f2e;border-radius:12px;overflow:hidden}
+.sidebar{width:56px;background:#1a1f2e;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;border-right:1px solid rgba(255,255,255,0.07)}
+.logo{width:32px;height:32px;background:#3b82f6;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;margin-bottom:10px}
+.nav{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.45}
+.nav.active{background:rgba(59,130,246,0.2);opacity:1}
+.nav svg{width:18px;height:18px;fill:none;stroke:#9ca3af;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav.active svg{stroke:#60a5fa}
+.main{flex:1;display:flex;flex-direction:column;background:#f0f2f5;min-width:0}
+.topbar{height:48px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px;flex-shrink:0}
+.bc{font-size:12px;color:#6b7280;display:flex;align-items:center;gap:6px}
+.bc b{color:#111827;font-weight:500}
+.dot4{width:4px;height:4px;background:#d1d5db;border-radius:50%}
+.alert-bar{background:#fef9f9;border-bottom:1px solid #fecaca;padding:7px 16px;display:flex;align-items:center;gap:10px;font-size:11px;color:#991b1b;flex-shrink:0}
+.tab-bar{display:flex;border-bottom:1px solid #e5e7eb;background:#fff;padding:0 16px;flex-shrink:0;overflow-x:auto}
+.tab{padding:10px 14px;font-size:12px;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
+.tab.soon{color:#d1d5db;cursor:default}
+.content{flex:1;overflow-y:auto;padding:14px}
+.content.hidden{display:none}
+.slabel{font-size:10px;font-weight:500;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.card{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:12px 14px}
+.kcard{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:12px}
+.ktop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.kttl{font-size:10px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+.kval{font-size:22px;font-weight:500;color:#111827;line-height:1}
+.ksub{font-size:10px;color:#6b7280;margin-top:2px}
+.kchg{font-size:11px;margin-top:4px}
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.p-ok{background:#d1fae5;color:#065f46}
+.p-warn{background:#fef3c7;color:#92400e}
+.p-err{background:#fee2e2;color:#991b1b}
+.p-blue{background:#dbeafe;color:#1e40af}
+.p-gray{background:#f3f4f6;color:#374151}
+.map-bg{height:110px;background:#dbeafe;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(148,163,184,0.2) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,0.2) 1px,transparent 1px);background-size:18px 18px}
+.map-pin{width:16px;height:16px;background:#2563eb;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff}
+.map-lbl{position:absolute;bottom:5px;left:7px;background:rgba(0,0,0,0.5);color:#fff;font-size:10px;padding:1px 5px;border-radius:3px}
+.tbl-wrap{background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:10px}
+.tbl-hdr-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f3f4f6}
+.tbl-ttl{font-size:13px;font-weight:500;color:#111827}
+.tbl-sub{font-size:10px;color:#6b7280;margin-top:2px}
+.dtbl{width:100%;border-collapse:collapse;font-size:11px}
+.dtbl th{background:#f9fafb;font-size:10px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:left;white-space:nowrap}
+.dtbl td{padding:8px 10px;border-bottom:1px solid #f9fafb;color:#374151;white-space:nowrap}
+.dtbl tr:last-child td{border-bottom:none}
+.dtbl tr:hover td{background:#f9fafb}
+.chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:500}
+.c-ok{background:#d1fae5;color:#065f46}
+.c-warn{background:#fef3c7;color:#92400e}
+.c-err{background:#fee2e2;color:#991b1b}
+.c-blue{background:#dbeafe;color:#1e40af}
+.c-purple{background:#ede9fe;color:#5b21b6}
+.c-teal{background:#ccfbf1;color:#0f766e}
+.c-gray{background:#f3f4f6;color:#6b7280}
+.cdot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.cdot-ok{background:#10b981}
+.cdot-lost{background:#f59e0b}
+.cdot-off{background:#ef4444}
+.mbar{display:flex;align-items:center;gap:5px}
+.mb{width:56px;height:4px;background:#f3f4f6;border-radius:2px;overflow:hidden;flex-shrink:0}
+.mf{height:100%;border-radius:2px}
+.sub{font-size:10px;color:#6b7280;margin-top:2px}
+.arr-up{color:#10b981}
+.arr-dn{color:#ef4444}
+.arr-fl{color:#6b7280}
+.chart-card{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:14px;margin-bottom:10px}
+.chart-ttl{font-size:13px;font-weight:500;color:#111827;margin-bottom:4px}
+.chart-sub{font-size:10px;color:#6b7280;margin-bottom:8px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#6b7280;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:4px}
+.ls{width:16px;height:3px;border-radius:2px;display:inline-block}
+.sel-wrap{display:flex;gap:4px}
+.sel-btn{padding:3px 10px;border-radius:4px;border:1px solid #e5e7eb;background:#fff;font-size:11px;color:#374151;cursor:pointer}
+.sel-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.badge-conn{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+.sect-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sidebar">
+    <div class="logo">K</div>
+    <div class="nav"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="nav active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="nav"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    <div class="nav" style="margin-top:auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="bc">Portfolio <div class="dot4"></div> United Pacific <div class="dot4"></div> <b>Store #214 — San Diego</b></div>
+      <div style="margin-left:auto;font-size:11px;color:#6b7280">April 2026</div>
+    </div>
+
+    <div class="alert-bar">
+      <svg width="13" height="13" fill="none" stroke="#991b1b" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      RTU-2 setpoint compliance 83.2% — below 98% target &nbsp;|&nbsp; RTU-2 runtime 19.4 h/day — above 18h threshold
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="showTab('overview',this)">Overview</div>
+      <div class="tab" onclick="showTab('hvac',this)">HVAC</div>
+      <div class="tab" onclick="showTab('refrig',this)">Refrigeration</div>
+      <div class="tab soon">Energy</div>
+      <div class="tab soon">Alarms</div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="content" id="tab-overview">
+      <div class="g2" style="margin-bottom:10px">
+        <div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden">
+          <div class="map-bg">
+            <div class="map-grid"></div>
+            <div class="map-pin"></div>
+            <div class="map-lbl">Store #214</div>
+          </div>
+          <div style="padding:10px 12px;display:flex;gap:16px;align-items:flex-start">
+            <div>
+              <div style="font-size:12px;font-weight:500;color:#111827">9821 Mission Gorge Rd</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:1px">San Diego, CA 92071</div>
+              <div style="display:flex;gap:12px;margin-top:8px">
+                <div style="font-size:11px;color:#374151"><b style="color:#111827">3</b> RTUs</div>
+                <div style="font-size:11px;color:#374151"><b style="color:#111827">1</b> Walk-in</div>
+                <div style="font-size:11px;color:#374151"><b style="color:#111827">1</b> Freezer</div>
+                <div style="font-size:11px;color:#374151"><b style="color:#111827">24h</b></div>
+              </div>
+            </div>
+            <div style="margin-left:auto;text-align:right">
+              <div style="font-size:10px;color:#6b7280">Gateway GW-001</div>
+              <div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:2px 8px;border-radius:10px;background:#d1fae5;color:#065f46;font-size:10px;font-weight:500">
+                <span class="cdot cdot-ok"></span>Online
+              </div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">Last seen 4 min ago</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="slabel" style="margin:0 0 10px">ROI & savings</div>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1">
+              <div style="font-size:10px;color:#6b7280">Accumulated savings</div>
+              <div style="font-size:20px;font-weight:500;color:#2563eb;margin-top:2px">$14,280</div>
+              <div style="font-size:10px;color:#10b981;margin-top:2px">▲ $480 vs March</div>
+            </div>
+            <div style="width:1px;background:#f3f4f6"></div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:#6b7280">Investment</div>
+              <div style="font-size:20px;font-weight:500;color:#111827;margin-top:2px">$12,400</div>
+              <div style="margin-top:5px">
+                <div style="height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden">
+                  <div style="width:100%;height:100%;background:#10b981;border-radius:3px"></div>
+                </div>
+                <div style="font-size:10px;color:#065f46;margin-top:3px;font-weight:500">ROI achieved · 115%</div>
+              </div>
+            </div>
+            <div style="width:1px;background:#f3f4f6"></div>
+            <div style="flex:1">
+              <div style="font-size:10px;color:#6b7280">Payback period</div>
+              <div style="font-size:20px;font-weight:500;color:#111827;margin-top:2px">26 <span style="font-size:12px;color:#6b7280">mo</span></div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">Installed Feb 2024</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slabel">HVAC — site overview · April 2026</div>
+      <div class="g4">
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Runtime</div><span class="pill p-warn">Watch</span></div>
+          <div class="kval">13.6 <span style="font-size:13px;color:#6b7280">h/day</span></div>
+          <div class="ksub">site avg · target 8–18 h</div>
+          <div class="kchg arr-dn">▼ 1 device above threshold</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Cooling ΔT</div><span class="pill p-ok">Normal</span></div>
+          <div class="kval">18.2 <span style="font-size:13px;color:#6b7280">°F</span></div>
+          <div class="ksub">site avg · target 16–22°F</div>
+          <div class="kchg arr-fl" style="color:#6b7280">All devices in range</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Setpoint compliance</div><span class="pill p-err">Action needed</span></div>
+          <div class="kval">94.1 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">site avg · target ≥ 98%</div>
+          <div class="kchg arr-dn">▼ 1 device below threshold</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Temp compliance</div><span class="pill p-ok">Normal</span></div>
+          <div class="kval">96.3 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">site avg · target ≥ 95%</div>
+          <div class="kchg arr-fl" style="color:#6b7280">All devices in range</div>
+        </div>
+      </div>
+
+      <div class="slabel">Refrigeration — site overview · April 2026</div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Walk-in coolers</div><span class="pill p-ok">In compliance</span></div>
+          <div class="kval">99.1 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">avg compliance · target ≥ 98% · range 34–38°F</div>
+          <div class="kchg" style="color:#6b7280">Current temp: <b style="color:#065f46">35.8°F</b></div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Freezers</div><span class="pill p-ok">In compliance</span></div>
+          <div class="kval">99.4 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">avg compliance · target ≥ 99% · range -10°F–0°F</div>
+          <div class="kchg" style="color:#6b7280">Current temp: <b style="color:#065f46">-4.2°F</b></div>
+        </div>
+      </div>
+
+      <div class="slabel">Energy — current month</div>
+      <div class="g3" style="margin-bottom:10px">
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Consumption</div><span class="pill p-ok">Below baseline</span></div>
+          <div class="kval">2,847 <span style="font-size:13px;color:#6b7280">kWh</span></div>
+          <div class="ksub">April 2026</div>
+          <div class="kchg arr-up">▼ 6.2% vs baseline</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Peak demand</div><span class="pill p-ok">Normal</span></div>
+          <div class="kval">27.4 <span style="font-size:13px;color:#6b7280">kW</span></div>
+          <div class="ksub">April 2026</div>
+          <div class="kchg arr-up">▼ 3.1% vs March</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">M&V savings</div><span class="pill p-blue">This month</span></div>
+          <div class="kval">$480 <span style="font-size:13px;color:#6b7280">/mo</span></div>
+          <div class="ksub">vs baseline period</div>
+          <div class="kchg arr-up">▲ 7.4% efficiency gain</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HVAC TAB -->
+    <div class="content hidden" id="tab-hvac">
+      <div class="slabel">HVAC KPIs — site averages · April 2026</div>
+      <div class="g4">
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Runtime</div><span class="pill p-warn">Watch</span></div>
+          <div class="kval">13.6 <span style="font-size:13px;color:#6b7280">h/day</span></div>
+          <div class="ksub">site avg · 3 devices · target 8–18 h</div>
+          <div class="kchg arr-dn">▼ RTU-2 above threshold</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Cooling ΔT</div><span class="pill p-ok">Normal</span></div>
+          <div class="kval">18.2 <span style="font-size:13px;color:#6b7280">°F</span></div>
+          <div class="ksub">site avg · compressor-on only</div>
+          <div class="kchg arr-fl" style="color:#6b7280">All devices in range</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Setpoint compliance</div><span class="pill p-err">Action needed</span></div>
+          <div class="kval">94.1 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">site avg · policy day 76°F / night 78°F</div>
+          <div class="kchg arr-dn">▼ RTU-2 at 83.2%</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Temp compliance</div><span class="pill p-ok">Normal</span></div>
+          <div class="kval">96.3 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">site avg · band 72–79°F daytime</div>
+          <div class="kchg arr-fl" style="color:#6b7280">All devices in range</div>
+        </div>
+      </div>
+
+      <div class="slabel">Per device — HVAC</div>
+      <div class="tbl-wrap">
+        <div class="tbl-hdr-bar">
+          <div>
+            <div class="tbl-ttl">Device detail — current month</div>
+            <div class="tbl-sub">Individual readings per HVAC unit · last known values shown in gray for devices with lost connection</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="dtbl">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Type</th>
+                <th>Connection</th>
+                <th>Data avail.</th>
+                <th>Runtime</th>
+                <th>Cooling ΔT</th>
+                <th>Setpoint compl.</th>
+                <th>Temp compl.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;color:#111827">RTU-1</td>
+                <td><span class="chip c-blue">RTU</span></td>
+                <td>
+                  <div class="badge-conn"><span class="cdot cdot-ok"></span><span style="color:#065f46;font-weight:500">Online</span></div>
+                  <div class="sub">4 min ago · Full availability</div>
+                </td>
+                <td style="font-weight:500;color:#065f46">100%</td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf c-ok" style="width:58%;background:#10b981"></div></div><span class="chip c-ok">11.2h</span></div>
+                  <div class="sub">target 8–18h</div>
+                </td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf" style="width:70%;background:#10b981"></div></div><span class="chip c-ok">17.8°F</span></div>
+                  <div class="sub">target 16–22°F</div>
+                </td>
+                <td><span class="chip c-ok">98.7%</span><div class="sub">day 76°F · night 78°F</div></td>
+                <td><span class="chip c-ok">97.2%</span><div class="sub">band 72–79°F</div></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;color:#111827">RTU-2</td>
+                <td><span class="chip c-blue">RTU</span></td>
+                <td>
+                  <div class="badge-conn"><span class="cdot cdot-ok"></span><span style="color:#065f46;font-weight:500">Online</span></div>
+                  <div class="sub">2 min ago · Full availability</div>
+                </td>
+                <td style="font-weight:500;color:#065f46">100%</td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf" style="width:94%;background:#ef4444"></div></div><span class="chip c-err">19.4h</span></div>
+                  <div class="sub">above 18h threshold</div>
+                </td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf" style="width:82%;background:#10b981"></div></div><span class="chip c-ok">19.1°F</span></div>
+                  <div class="sub">target 16–22°F</div>
+                </td>
+                <td><span class="chip c-err">83.2%</span><div class="sub">override detected</div></td>
+                <td><span class="chip c-ok">96.8%</span><div class="sub">band 72–79°F</div></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;color:#111827">RTU-3</td>
+                <td><span class="chip c-blue">RTU</span></td>
+                <td>
+                  <div class="badge-conn"><span class="cdot cdot-lost"></span><span style="color:#92400e;font-weight:500">Lost connection</span></div>
+                  <div class="sub">1h 12m ago · Issues this month</div>
+                </td>
+                <td style="font-weight:500;color:#92400e">94%</td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf" style="width:52%;background:#d1d5db"></div></div><span style="color:#6b7280">10.6h*</span></div>
+                  <div class="sub" style="color:#f59e0b">last known value</div>
+                </td>
+                <td>
+                  <div class="mbar"><div class="mb"><div class="mf" style="width:76%;background:#d1d5db"></div></div><span style="color:#6b7280">17.4°F*</span></div>
+                  <div class="sub" style="color:#f59e0b">last known value</div>
+                </td>
+                <td><span class="chip c-gray">—*</span><div class="sub" style="color:#f59e0b">last known value</div></td>
+                <td><span class="chip c-gray">—*</span><div class="sub" style="color:#f59e0b">last known value</div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="sect-hdr">
+          <div>
+            <div class="chart-ttl">HVAC trends — monthly averages per device</div>
+            <div class="chart-sub">Site avg shown as reference · compressor-on intervals only for ΔT</div>
+          </div>
+          <div class="sel-wrap" id="hvacPeriodSel">
+            <button class="sel-btn" onclick="setHvacPeriod(3,this)">3m</button>
+            <button class="sel-btn active" onclick="setHvacPeriod(6,this)">6m</button>
+            <button class="sel-btn" onclick="setHvacPeriod(12,this)">12m</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="li"><span class="ls" style="background:#2563eb"></span>RTU-1</div>
+          <div class="li"><span class="ls" style="background:#7c3aed"></span>RTU-2</div>
+          <div class="li"><span class="ls" style="background:#0891b2"></span>RTU-3</div>
+          <div class="li"><span style="width:16px;height:0;border-top:2px dashed #94a3b8;display:inline-block"></span>Target band</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Runtime (h/day)</div>
+            <div style="position:relative;height:130px"><canvas id="hc1"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Cooling ΔT (°F)</div>
+            <div style="position:relative;height:130px"><canvas id="hc2"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Setpoint compliance (%)</div>
+            <div style="position:relative;height:130px"><canvas id="hc3"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Temp compliance (%)</div>
+            <div style="position:relative;height:130px"><canvas id="hc4"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFRIGERATION TAB -->
+    <div class="content hidden" id="tab-refrig">
+      <div class="slabel">Refrigeration KPIs — site averages · April 2026</div>
+      <div class="g2">
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Walk-in coolers</div><span class="pill p-ok">In compliance</span></div>
+          <div class="kval">99.1 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">avg compliance · 1 unit · target ≥ 98% · range 34–38°F</div>
+          <div class="kchg" style="color:#6b7280">Current: <b style="color:#065f46">35.8°F</b> · All units in range</div>
+        </div>
+        <div class="kcard">
+          <div class="ktop"><div class="kttl">Freezers</div><span class="pill p-ok">In compliance</span></div>
+          <div class="kval">99.4 <span style="font-size:13px;color:#6b7280">%</span></div>
+          <div class="ksub">avg compliance · 1 unit · target ≥ 99% · range -10°F–0°F</div>
+          <div class="kchg" style="color:#6b7280">Current: <b style="color:#065f46">-4.2°F</b> · All units in range</div>
+        </div>
+      </div>
+
+      <div class="slabel">Per device — Refrigeration</div>
+      <div class="tbl-wrap">
+        <div class="tbl-hdr-bar">
+          <div>
+            <div class="tbl-ttl">Device detail — current month</div>
+            <div class="tbl-sub">Current temperature + monthly compliance per unit</div>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="dtbl">
+            <thead>
+              <tr>
+                <th>Device</th>
+                <th>Type</th>
+                <th>Connection</th>
+                <th>Data avail.</th>
+                <th>Current temp</th>
+                <th>Target range</th>
+                <th>Monthly compliance</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;color:#111827">WIC-1</td>
+                <td><span class="chip c-blue">Walk-in cooler</span></td>
+                <td>
+                  <div class="badge-conn"><span class="cdot cdot-ok"></span><span style="color:#065f46;font-weight:500">Online</span></div>
+                  <div class="sub">6 min ago · Full availability</div>
+                </td>
+                <td style="font-weight:500;color:#065f46">100%</td>
+                <td><span style="font-size:14px;font-weight:500;color:#065f46">35.8°F</span></td>
+                <td style="color:#6b7280;font-size:11px">34–38°F</td>
+                <td><span class="chip c-ok">99.1%</span><div class="sub">threshold ≥ 98%</div></td>
+                <td><span class="chip c-ok">In compliance</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;color:#111827">FRZ-1</td>
+                <td><span class="chip c-teal">Freezer</span></td>
+                <td>
+                  <div class="badge-conn"><span class="cdot cdot-ok"></span><span style="color:#065f46;font-weight:500">Online</span></div>
+                  <div class="sub">3 min ago · Full availability</div>
+                </td>
+                <td style="font-weight:500;color:#065f46">100%</td>
+                <td><span style="font-size:14px;font-weight:500;color:#065f46">-4.2°F</span></td>
+                <td style="color:#6b7280;font-size:11px">-10°F – 0°F</td>
+                <td><span class="chip c-ok">99.4%</span><div class="sub">threshold ≥ 99%</div></td>
+                <td><span class="chip c-ok">In compliance</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="sect-hdr">
+          <div>
+            <div class="chart-ttl">Refrigeration trends — monthly averages per unit</div>
+            <div class="chart-sub">Average temperature and compliance by month</div>
+          </div>
+          <div class="sel-wrap" id="refPeriodSel">
+            <button class="sel-btn" onclick="setRefPeriod(3,this)">3m</button>
+            <button class="sel-btn active" onclick="setRefPeriod(6,this)">6m</button>
+            <button class="sel-btn" onclick="setRefPeriod(12,this)">12m</button>
+          </div>
+        </div>
+        <div class="legend">
+          <div class="li"><span class="ls" style="background:#2563eb"></span>WIC-1</div>
+          <div class="li"><span class="ls" style="background:#0f766e"></span>FRZ-1</div>
+          <div class="li"><span style="width:16px;height:0;border-top:2px dashed #94a3b8;display:inline-block"></span>Target band</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Walk-in cooler temperature (°F)</div>
+            <div style="position:relative;height:130px"><canvas id="rc1"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Freezer temperature (°F)</div>
+            <div style="position:relative;height:130px"><canvas id="rc2"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Walk-in cooler compliance (%)</div>
+            <div style="position:relative;height:130px"><canvas id="rc3"></canvas></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px;font-weight:500">Freezer compliance (%)</div>
+            <div style="position:relative;height:130px"><canvas id="rc4"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function showTab(name,el){
+  document.querySelectorAll('.tab:not(.soon)').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.content').forEach(c=>c.classList.add('hidden'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  if(name==='hvac'&&!window.hvacChartsBuilt){buildHvacCharts(6);window.hvacChartsBuilt=true;}
+  if(name==='refrig'&&!window.refChartsBuilt){buildRefCharts(6);window.refChartsBuilt=true;}
+}
+
+const ALL_MONTHS=['Nov','Dec','Jan','Feb','Mar','Apr','Jul','Aug','Sep','Oct','Nov2','Dec2'];
+const MONTHS12=['May\'25','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan\'26','Feb','Mar','Apr'];
+
+const HVAC_DATA={
+  runtime:{rtu1:[11.4,11.8,11.2,11.6,11.0,11.2,11.3,11.5,11.1,11.4,11.0,11.2],rtu2:[14.2,15.1,16.3,17.0,18.2,19.4,14.5,15.3,16.1,17.2,18.0,19.4],rtu3:[10.1,10.4,10.6,10.2,10.8,10.6,10.3,10.5,10.4,10.2,10.7,10.6]},
+  dt:{rtu1:[18.1,17.8,18.4,17.9,18.2,17.8,18.0,17.9,18.3,18.0,18.1,17.8],rtu2:[19.2,18.8,19.4,19.1,19.3,19.1,19.0,18.9,19.2,19.1,19.3,19.1],rtu3:[17.6,17.2,17.9,17.4,17.7,17.8,17.5,17.3,17.8,17.5,17.6,17.8]},
+  sp:{rtu1:[99.1,98.8,99.2,98.9,99.0,98.7,99.1,98.9,99.0,98.8,99.1,98.7],rtu2:[97.4,95.2,92.1,89.6,86.4,83.2,96.8,94.1,91.3,88.7,85.9,83.2],rtu3:[100,99.8,100,99.6,100,100,100,99.7,100,99.8,100,100]},
+  tc:{rtu1:[97.4,97.8,97.2,97.6,97.1,97.2,97.5,97.7,97.3,97.6,97.2,97.2],rtu2:[96.2,96.8,96.4,97.0,96.5,96.8,96.4,96.7,96.5,96.9,96.6,96.8],rtu3:[95.8,95.4,96.1,95.7,96.0,95.1,95.9,95.6,96.0,95.8,95.9,95.1]}
+};
+const REF_DATA={
+  wicTemp:[35.9,35.6,35.8,35.7,35.9,35.8,35.7,35.8,35.6,35.9,35.7,35.8],
+  frzTemp:[-4.1,-3.8,-4.3,-4.0,-4.2,-4.2,-4.0,-3.9,-4.2,-4.1,-4.3,-4.2],
+  wicComp:[99.2,99.0,99.3,99.1,99.2,99.1,99.2,99.1,99.3,99.0,99.2,99.1],
+  frzComp:[99.5,99.3,99.6,99.4,99.5,99.4,99.5,99.4,99.6,99.3,99.5,99.4]
+};
+
+function slice(arr,n){return arr.slice(arr.length-n);}
+function chartOpts(yMin,yMax,pct){
+  return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}${pct?'%':''}`}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280'},border:{display:false}},y:{min:yMin,max:yMax,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280'},border:{display:false}}}};
+}
+function bandDs(low,high,n){
+  return[
+    {label:'_lo',data:Array(n).fill(low),borderColor:'transparent',pointRadius:0,fill:false},
+    {label:'_hi',data:Array(n).fill(high),borderColor:'transparent',backgroundColor:'rgba(148,163,184,0.1)',pointRadius:0,fill:'-1'}
+  ];
+}
+function ds(label,data,color){return{label,data,borderColor:color,backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3,fill:false};}
+
+let hvacCharts=[],refCharts=[];
+
+function buildHvacCharts(n){
+  hvacCharts.forEach(c=>c.destroy());hvacCharts=[];
+  const lbl=slice(MONTHS12,n);
+  const s=d=>slice(d,n);
+  const C=(id,datasets,yMin,yMax,pct)=>{hvacCharts.push(new Chart(document.getElementById(id),{type:'line',data:{labels:lbl,datasets},options:chartOpts(yMin,yMax,pct)}));};
+  C('hc1',[...bandDs(8,18,n),ds('RTU-1',s(HVAC_DATA.runtime.rtu1),'#2563eb'),ds('RTU-2',s(HVAC_DATA.runtime.rtu2),'#7c3aed'),ds('RTU-3',s(HVAC_DATA.runtime.rtu3),'#0891b2')],4,24,false);
+  C('hc2',[...bandDs(16,22,n),ds('RTU-1',s(HVAC_DATA.dt.rtu1),'#2563eb'),ds('RTU-2',s(HVAC_DATA.dt.rtu2),'#7c3aed'),ds('RTU-3',s(HVAC_DATA.dt.rtu3),'#0891b2')],10,26,false);
+  C('hc3',[...bandDs(98,100,n),ds('RTU-1',s(HVAC_DATA.sp.rtu1),'#2563eb'),ds('RTU-2',s(HVAC_DATA.sp.rtu2),'#7c3aed'),ds('RTU-3',s(HVAC_DATA.sp.rtu3),'#0891b2')],75,101,true);
+  C('hc4',[...bandDs(95,100,n),ds('RTU-1',s(HVAC_DATA.tc.rtu1),'#2563eb'),ds('RTU-2',s(HVAC_DATA.tc.rtu2),'#7c3aed'),ds('RTU-3',s(HVAC_DATA.tc.rtu3),'#0891b2')],88,101,true);
+}
+
+function buildRefCharts(n){
+  refCharts.forEach(c=>c.destroy());refCharts=[];
+  const lbl=slice(MONTHS12,n);
+  const s=d=>slice(d,n);
+  const C=(id,datasets,yMin,yMax,pct)=>{refCharts.push(new Chart(document.getElementById(id),{type:'line',data:{labels:lbl,datasets},options:chartOpts(yMin,yMax,pct)}));};
+  C('rc1',[...bandDs(34,38,n),ds('WIC-1',s(REF_DATA.wicTemp),'#2563eb')],30,42,false);
+  C('rc2',[...bandDs(-10,0,n),ds('FRZ-1',s(REF_DATA.frzTemp),'#0f766e')],-14,4,false);
+  C('rc3',[...bandDs(98,100,n),ds('WIC-1',s(REF_DATA.wicComp),'#2563eb')],94,101,true);
+  C('rc4',[...bandDs(99,100,n),ds('FRZ-1',s(REF_DATA.frzComp),'#0f766e')],95,101,true);
+}
+
+function setHvacPeriod(n,btn){
+  document.querySelectorAll('#hvacPeriodSel .sel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildHvacCharts(n);
+}
+function setRefPeriod(n,btn){
+  document.querySelectorAll('#refPeriodSel .sel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildRefCharts(n);
+}
+</script>
+</body>
+</html>
