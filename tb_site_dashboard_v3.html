@@ -345,11 +345,12 @@ body{background:#e5e7eb;padding:20px;font-family:sans-serif}
       </div>
 
       <div id="devPanel">
-        <div class="g4" id="devKpiCards"></div>
+        <div class="g4" id="devKpiCards" style="margin-bottom:10px"></div>
         <div class="chart-card">
           <div class="chart-ttl" id="devChartTtl">RTU-1 — telemetry · Today (10 min intervals)</div>
-          <div class="chart-sub">Raw telemetry signals used for KPI calculation</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px" id="devCharts"></div>
+          <div class="chart-sub">All signals overlaid · left axis = temperature (°F) · right axis = power (kW) or compressor</div>
+          <div id="devLegend" style="display:none"></div>
+          <div style="position:relative;height:260px"><canvas id="devMainChart"></canvas></div>
         </div>
       </div>
     </div>
@@ -470,7 +471,7 @@ function showRefSub(name,el){}
 // showTab defined above, chart-dependent init here
 function initTabCharts(name){
   if(name==='overview'&&!window.ovBuilt){buildOverviewCharts();window.ovBuilt=true;}
-  if(name==='device'&&!window.devBuilt){window._window._currentDev='RTU-1';window._window._currentPeriod='today';renderDevPanel();window.devBuilt=true;}
+  if(name==='device'&&!window.devBuilt){window._currentDev=window._currentDev||'RTU-1';window._currentPeriod=window._currentPeriod||'today';if(typeof renderDevPanel==='function'){renderDevPanel();}window.devBuilt=true;}
   if(name==='roi'&&!window.roiBuilt){buildRoiTab();window.roiBuilt=true;}
 }
 
@@ -512,7 +513,9 @@ const DEV_CONFIG={
   'FRZ-1':{type:'refrig',color:'#0f766e',signals:['Unit temp (°F)','Setpoint (°F)','Compressor status'],kpis:{temp:'-4.2°F',compliance:'99.4%',range:'-10°F–0°F',status:'In compliance'}}
 };
 
-window._currentDev=window._currentDev||'RTU-1',window._currentPeriod='today',devChartInstances=[];
+var devChartInstances=[];
+if(!window._currentDev)window._currentDev='RTU-1';
+if(!window._currentPeriod)window._currentPeriod='today';
 
 function selectDev(name,el){
   document.querySelectorAll('.dev-btn').forEach(b=>b.classList.remove('active'));
@@ -531,73 +534,93 @@ function setPeriod(period,el){
 
 function applyCustomDate(){renderDevPanel();}
 
+function genWave(base,amp,pts,noise){
+  noise=noise||0.3;
+  return Array.from({length:pts},function(_,i){
+    return parseFloat((base+Math.sin(i*0.2)*amp+(Math.random()-0.5)*noise).toFixed(2));
+  });
+}
+function makeLabels(pts){
+  var p=window._currentPeriod||'today';
+  return Array.from({length:pts},function(_,i){
+    if(p==='today'||p==='yesterday'){var h=Math.floor(i*10/60).toString().padStart(2,'0');var m=(i*10%60).toString().padStart(2,'0');return h+':'+m;}
+    if(p==='7d') return 'D'+(Math.floor(i/6)+1);
+    return 'H'+(i+1);
+  });
+}
+function getPts(){return 144;}
+var devMainChartInstance=null;
+
 function renderDevPanel(){
-  const cfg=DEV_CONFIG[window._currentDev||"RTU-1"];
-  const periodLabel={today_lbl:'Today (10 min intervals)',yesterday:'Yesterday (10 min intervals)','7d':'Last 7 days','30d':'Last 30 days',custom:'Custom range'}[window._currentPeriod]||'Custom range';
+  var dev=window._currentDev||'RTU-1';
+  var cfg=DEV_CONFIG[dev];
+  var p=window._currentPeriod||'today';
+  var periodLabel={today:'Today (10 min intervals)',yesterday:'Yesterday (10 min intervals)','7d':'Last 7 days','30d':'Last 30 days',custom:'Custom range'}[p]||p;
 
-  // KPI cards
-  const kpiHtml=cfg.type==='hvac'?`
-    <div class="kcard"><div class="ktop"><div class="kttl">Runtime</div></div><div class="kval">${cfg.kpis.runtime}</div><div class="ksub">avg h/day · target 8–18h</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Cooling ΔT</div></div><div class="kval">${cfg.kpis.dt}</div><div class="ksub">avg °F · compressor-on only</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Setpoint compliance</div></div><div class="kval">${cfg.kpis.sp}</div><div class="ksub">% time within policy</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Temp compliance</div></div><div class="kval">${cfg.kpis.tc}</div><div class="ksub">% time within comfort band</div></div>
-  `:`
-    <div class="kcard"><div class="ktop"><div class="kttl">Current temp</div></div><div class="kval" style="color:#065f46">${cfg.kpis.temp}</div><div class="ksub">target range ${cfg.kpis.range}</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Monthly compliance</div></div><div class="kval">${cfg.kpis.compliance}</div><div class="ksub">% time within range</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Status</div></div><div class="kval" style="font-size:14px"><span class="chip c-ok">${cfg.kpis.status}</span></div><div class="ksub">vs threshold</div></div>
-    <div class="kcard"><div class="ktop"><div class="kttl">Data availability</div></div><div class="kval">100%</div><div class="ksub">this month</div></div>
-  `;
-  document.getElementById('devKpiCards').innerHTML=kpiHtml;
-  document.getElementById('devChartTtl').textContent=`${window._currentDev||"RTU-1"} — telemetry · ${periodLabel}`;
-
-  // Build charts
-  devChartInstances.forEach(c=>c.destroy());
-  devChartInstances=[];
-
-  const n=window._currentPeriod==='today'||window._currentPeriod==='yesterday'?144:currentPeriod==='7d'?1008:currentPeriod==='30d'?144:144;
-  const pts=Math.min(n,144);
-  const labels=Array.from({length:pts},(_,i)=>{
-    if(window._currentPeriod==='today'||window._currentPeriod==='yesterday'){const h=Math.floor(i*10/60).toString().padStart(2,'0');const m=(i*10%60).toString().padStart(2,'0');return `${h}:${m}`;}
-    return `D${Math.floor(i/(144/7))+1}`;
-  }).filter((_,i)=>i%Math.max(1,Math.floor(pts/24))===0?true:pts<=48);
-
-  const thinLabels=Array.from({length:pts},(_,i)=>{
-    if(window._currentPeriod==='today'||window._currentPeriod==='yesterday'){const h=Math.floor(i*10/60).toString().padStart(2,'0');const m=(i*10%60).toString().padStart(2,'0');return `${h}:${m}`;}
-    return `H${i+1}`;
-  });
-
-  function genWave(base,amp,pts,noise=0.3){return Array.from({length:pts},(_,i)=>parseFloat((base+Math.sin(i*0.2)*amp+(Math.random()-0.5)*noise).toFixed(1)));}
-
-  let chartsConfig=[];
+  var kpiHtml='';
   if(cfg.type==='hvac'){
-    chartsConfig=[
-      {id:'dc1',label:'Supply temp (°F)',data:genWave(58,4,pts,0.5),yMin:48,yMax:72,color:'#2563eb'},
-      {id:'dc2',label:'Return temp (°F)',data:genWave(76,3,pts,0.4),yMin:66,yMax:86,color:'#7c3aed'},
-      {id:'dc3',label:'Space temp (°F)',data:genWave(74,2,pts,0.3),yMin:68,yMax:82,color:'#0891b2'},
-      {id:'dc4',label:'Setpoint (°F)',data:genWave(76,0.5,pts,0.1),yMin:68,yMax:84,color:'#0f766e'},
-      {id:'dc5',label:'kW',data:genWave(8.2,2.1,pts,0.4),yMin:0,yMax:16,color:'#f59e0b'},
-      {id:'dc6',label:'Mode (1=cool 2=heat 3=fan)',data:Array.from({length:pts},(_,i)=>i<pts*0.7?1:i<pts*0.85?3:2),yMin:0,yMax:4,color:'#6b7280'}
-    ];
+    var rtCol=parseFloat(cfg.kpis.runtime)>18?'#ef4444':parseFloat(cfg.kpis.runtime)<8?'#f59e0b':'#111827';
+    var spCol=parseFloat(cfg.kpis.sp)<98?'#ef4444':'#111827';
+    kpiHtml='<div class="kcard"><div class="ktop"><div class="kttl">Runtime</div></div><div class="kval" style="color:'+rtCol+'">'+cfg.kpis.runtime+'</div><div class="ksub">avg h/day · target 8–18h</div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Cooling ΔT</div></div><div class="kval">'+cfg.kpis.dt+'</div><div class="ksub">avg °F · compressor-on only</div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Setpoint compliance</div></div><div class="kval" style="color:'+spCol+'">'+cfg.kpis.sp+'</div><div class="ksub">% time within policy</div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Temp compliance</div></div><div class="kval">'+cfg.kpis.tc+'</div><div class="ksub">% time within comfort band</div></div>';
   } else {
-    const isWic=currentDev==='WIC-1';
-    chartsConfig=[
-      {id:'dc1',label:'Unit temp (°F)',data:genWave(isWic?35.8:-4.2,isWic?0.8:0.5,pts,0.2),yMin:isWic?32:−13,yMax:isWic?40:2,color:cfg.color},
-      {id:'dc2',label:'Setpoint (°F)',data:genWave(isWic?36:-5,0.1,pts,0.05),yMin:isWic?33:−8,yMax:isWic?39:0,color:'#0891b2'},
-      {id:'dc3',label:'Compressor (1=on 0=off)',data:Array.from({length:pts},(_,i)=>Math.sin(i*0.15)>0?1:0),yMin:-0.2,yMax:1.5,color:'#10b981'}
-    ];
+    kpiHtml='<div class="kcard"><div class="ktop"><div class="kttl">Current temp</div></div><div class="kval" style="color:#065f46">'+cfg.kpis.temp+'</div><div class="ksub">target '+cfg.kpis.range+'</div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Monthly compliance</div></div><div class="kval">'+cfg.kpis.compliance+'</div><div class="ksub">% time within range</div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Status</div></div><div class="kval" style="font-size:14px"><span class="chip c-ok">'+cfg.kpis.status+'</span></div></div>'+
+      '<div class="kcard"><div class="ktop"><div class="kttl">Data availability</div></div><div class="kval">100%</div></div>';
   }
+  document.getElementById('devKpiCards').innerHTML=kpiHtml;
+  document.getElementById('devChartTtl').textContent=dev+' — telemetry · '+periodLabel;
 
-  const chartsHtml=chartsConfig.map(c=>`<div><div style="font-size:10px;color:#6b7280;margin-bottom:3px;font-weight:500">${c.label}</div><div style="position:relative;height:110px"><canvas id="${c.id}"></canvas></div></div>`).join('');
-  document.getElementById('devCharts').style.gridTemplateColumns=cfg.type==='hvac'?'1fr 1fr 1fr':'1fr 1fr 1fr';
-  document.getElementById('devCharts').innerHTML=chartsHtml;
+  if(devMainChartInstance){devMainChartInstance.destroy();devMainChartInstance=null;}
+  var pts=getPts();
+  var labels=makeLabels(pts);
+  var datasets=[];
+  var legendHtml='';
 
-  chartsConfig.forEach(c=>{
-    devChartInstances.push(new Chart(document.getElementById(c.id),{
-      type:'line',
-      data:{labels:thinLabels,datasets:[ds(c.label,c.data,c.color)]},
-      options:chartOpts(c.yMin,c.yMax,false,'')
-    }));
-  });
+  if(cfg.type==='hvac'){
+    var supplyD=genWave(58,5,pts,0.6);
+    var returnD=genWave(76,3,pts,0.4);
+    var spaceD=genWave(74,2,pts,0.3);
+    var setpD=genWave(76,0.15,pts,0.05);
+    var kwD=genWave(8.5,2.5,pts,0.5).map(function(v){return Math.max(0,v);});
+    datasets.push({label:'_blo',data:Array(pts).fill(72),borderColor:'transparent',backgroundColor:'rgba(16,185,129,0.06)',fill:'+1',pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'_bhi',data:Array(pts).fill(79),borderColor:'rgba(16,185,129,0.3)',borderDash:[4,4],borderWidth:1,fill:false,pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'_slo',data:Array(pts).fill(74),borderColor:'transparent',backgroundColor:'rgba(59,130,246,0.05)',fill:'+1',pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'_shi',data:Array(pts).fill(78),borderColor:'rgba(59,130,246,0.25)',borderDash:[3,3],borderWidth:1,fill:false,pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'Supply temp (°F)',data:supplyD,borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3,yAxisID:'yT'});
+    datasets.push({label:'Return temp (°F)',data:returnD,borderColor:'#7c3aed',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3,yAxisID:'yT'});
+    datasets.push({label:'Space temp (°F)',data:spaceD,borderColor:'#0891b2',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.3,yAxisID:'yT'});
+    datasets.push({label:'Setpoint (°F)',data:setpD,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,borderDash:[6,3],tension:0.1,yAxisID:'yT'});
+    datasets.push({label:'kW (right axis)',data:kwD,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.08)',borderWidth:1.5,pointRadius:0,tension:0.3,fill:true,yAxisID:'yK'});
+    legendHtml='<div class="li"><span class="ls" style="background:#2563eb"></span>Supply temp (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#7c3aed"></span>Return temp (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#0891b2"></span>Space temp (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#f59e0b"></span>Setpoint (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#10b981"></span>kW (right axis)</div>'+
+      '<div class="li"><span style="width:16px;height:8px;background:rgba(16,185,129,0.1);border:1px dashed rgba(16,185,129,0.5);display:inline-block;border-radius:2px"></span>Comfort band 72–79°F</div>';
+    devMainChartInstance=new Chart(document.getElementById('devMainChart'),{type:'line',data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:true,position:'top',labels:{filter:function(item){return !item.text.startsWith('_');},font:{size:10},boxWidth:12,boxHeight:3,padding:10,color:'#374151'},onClick:function(e,legendItem,legend){var idx=legendItem.datasetIndex;var ci=legend.chart;ci.isDatasetVisible(idx)?ci.hide(idx):ci.show(idx);}},tooltip:{callbacks:{label:function(ctx){if(ctx.dataset.label&&ctx.dataset.label.startsWith('_'))return null;return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1);}}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280',maxRotation:0,autoSkip:true,maxTicksLimit:12},border:{display:false}},yT:{type:'linear',position:'left',min:40,max:95,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280',callback:function(v){return v+'°F'}},border:{display:false}},yK:{type:'linear',position:'right',min:0,max:20,grid:{display:false},ticks:{font:{size:9},color:'#10b981',callback:function(v){return v+' kW'}},border:{display:false}}}}});
+  } else {
+    var isWic=dev==='WIC-1';
+    var tLow=isWic?34:-10,tHigh=isWic?38:0,tBase=isWic?35.8:-4.2;
+    var tMin=isWic?30:-14,tMax=isWic?42:4;
+    var unitD=genWave(tBase,isWic?0.9:0.6,pts,0.2);
+    var spD=genWave(isWic?36:-5,0.05,pts,0.02);
+    var compD=Array.from({length:pts},function(_,i){return Math.sin(i*0.18)>-0.3?1:0;});
+    datasets.push({label:'_blo',data:Array(pts).fill(tLow),borderColor:'transparent',backgroundColor:'rgba(16,185,129,0.08)',fill:'+1',pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'_bhi',data:Array(pts).fill(tHigh),borderColor:'rgba(16,185,129,0.4)',borderDash:[4,4],borderWidth:1,fill:false,pointRadius:0,yAxisID:'yT'});
+    datasets.push({label:'Unit temp (°F)',data:unitD,borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.3,yAxisID:'yT'});
+    datasets.push({label:'Setpoint (°F)',data:spD,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,borderDash:[6,3],tension:0.1,yAxisID:'yT'});
+    datasets.push({label:'Compressor (right)',data:compD,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,0.1)',borderWidth:1.5,pointRadius:0,stepped:true,fill:true,yAxisID:'yC'});
+    legendHtml='<div class="li"><span class="ls" style="background:#2563eb"></span>Unit temp (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#f59e0b"></span>Setpoint (°F)</div>'+
+      '<div class="li"><span class="ls" style="background:#10b981"></span>Compressor on/off (right axis)</div>'+
+      '<div class="li"><span style="width:16px;height:8px;background:rgba(16,185,129,0.12);border:1px dashed rgba(16,185,129,0.5);display:inline-block;border-radius:2px"></span>Target range '+str(tLow)+'–'+str(tHigh)+'°F</div>';
+    devMainChartInstance=new Chart(document.getElementById('devMainChart'),{type:'line',data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:true,position:'top',labels:{filter:function(item){return !item.text.startsWith('_');},font:{size:10},boxWidth:12,boxHeight:3,padding:10,color:'#374151'},onClick:function(e,legendItem,legend){var idx=legendItem.datasetIndex;var ci=legend.chart;ci.isDatasetVisible(idx)?ci.hide(idx):ci.show(idx);}},tooltip:{callbacks:{label:function(ctx){if(ctx.dataset.label&&ctx.dataset.label.startsWith('_'))return null;return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1);}}}},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280',maxRotation:0,autoSkip:true,maxTicksLimit:12},border:{display:false}},yT:{type:'linear',position:'left',min:tMin,max:tMax,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280',callback:function(v){return v+'°F'}},border:{display:false}},yC:{type:'linear',position:'right',min:-0.2,max:1.8,grid:{display:false},ticks:{font:{size:9},color:'#10b981',callback:function(v){return v===1?'ON':v===0?'OFF':''}},border:{display:false}}}}});
+  }
+  document.getElementById('devLegend').innerHTML=legendHtml;
 }
 
 // ROI tab
