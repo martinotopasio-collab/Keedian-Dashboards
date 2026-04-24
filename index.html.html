@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio · United Pacific</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#e5e7eb;padding:20px;font-family:sans-serif}
+.wrap{display:flex;min-height:900px;background:#1a1f2e;border-radius:12px;overflow:hidden}
+.sidebar{width:56px;background:#1a1f2e;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:6px;border-right:1px solid rgba(255,255,255,0.07)}
+.logo{width:32px;height:32px;background:#3b82f6;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;margin-bottom:10px}
+.nav{width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;opacity:0.45}
+.nav.active{background:rgba(59,130,246,0.2);opacity:1}
+.nav svg{width:18px;height:18px;fill:none;stroke:#9ca3af;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav.active svg{stroke:#60a5fa}
+.main{flex:1;display:flex;flex-direction:column;background:#f0f2f5;min-width:0}
+.topbar{height:48px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px;flex-shrink:0}
+.bc{font-size:12px;color:#6b7280;display:flex;align-items:center;gap:6px}
+.bc b{color:#111827;font-weight:500}
+.dot4{width:4px;height:4px;background:#d1d5db;border-radius:50%}
+.tab-bar{display:flex;border-bottom:1px solid #e5e7eb;background:#fff;padding:0 16px;flex-shrink:0;overflow-x:auto}
+.tab{padding:10px 14px;font-size:12px;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:500}
+.tab.soon{color:#d1d5db;cursor:default}
+.content{flex:1;overflow-y:auto;padding:14px}
+.content.hidden{display:none}
+.slabel{font-size:10px;font-weight:500;color:#6b7280;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 8px}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.fcard{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:12px 14px}
+.fval{font-size:22px;font-weight:500;color:#111827}
+.flbl{font-size:10px;color:#6b7280;margin-top:2px}
+.fsub{font-size:11px;margin-top:4px}
+.kcard{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:12px}
+.ktop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.kttl{font-size:10px;color:#6b7280;font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+.kval{font-size:20px;font-weight:500;color:#111827;line-height:1}
+.ksub{font-size:10px;color:#6b7280;margin-top:2px}
+.kchg{font-size:11px;margin-top:4px}
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.p-ok{background:#d1fae5;color:#065f46}
+.p-warn{background:#fef3c7;color:#92400e}
+.p-err{background:#fee2e2;color:#991b1b}
+.p-blue{background:#dbeafe;color:#1e40af}
+.chart-card{background:#fff;border-radius:8px;border:1px solid #e5e7eb;padding:14px;margin-bottom:10px}
+.chart-ttl{font-size:13px;font-weight:500;color:#111827;margin-bottom:6px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#6b7280;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:4px}
+.ls{width:16px;height:3px;border-radius:2px;display:inline-block}
+.filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.fltr-lbl{font-size:11px;color:#6b7280;font-weight:500}
+.fsel{padding:4px 8px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-size:11px;color:#374151;cursor:pointer}
+.tbl-wrap{background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:10px}
+.tbl-hdr-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f3f4f6}
+.tbl-ttl{font-size:13px;font-weight:500;color:#111827}
+.tbl-cnt{font-size:11px;color:#6b7280}
+.dtbl{width:100%;border-collapse:collapse;font-size:11px}
+.dtbl th{background:#f9fafb;font-size:10px;font-weight:500;color:#6b7280;text-transform:uppercase;letter-spacing:0.05em;padding:7px 10px;border-bottom:1px solid #e5e7eb;text-align:left;cursor:pointer;white-space:nowrap;user-select:none}
+.dtbl th:hover{background:#f3f4f6}
+.dtbl th.sorted{color:#2563eb}
+.dtbl td{padding:7px 10px;border-bottom:1px solid #f9fafb;color:#374151;white-space:nowrap}
+.dtbl tr:last-child td{border-bottom:none}
+.dtbl tr:hover td{background:#f9fafb}
+.chip{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:500}
+.c-ok{background:#d1fae5;color:#065f46}
+.c-warn{background:#fef3c7;color:#92400e}
+.c-err{background:#fee2e2;color:#991b1b}
+.c-blue{background:#dbeafe;color:#1e40af}
+.c-purple{background:#ede9fe;color:#5b21b6}
+.c-gray{background:#f3f4f6;color:#6b7280}
+.cdot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:3px}
+.progress-wrap{width:70px;height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
+.progress-fill{height:100%;border-radius:3px}
+.arr-up{color:#10b981}
+.arr-dn{color:#ef4444}
+.arr-fl{color:#6b7280}
+.subtab-bar{display:flex;gap:4px;margin-bottom:12px}
+.subtab{padding:5px 14px;border-radius:6px;font-size:11px;color:#6b7280;cursor:pointer;border:1px solid #e5e7eb;background:#fff}
+.subtab.active{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sidebar">
+    <div class="logo">K</div>
+    <div class="nav"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="nav active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div class="nav"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    <div class="nav" style="margin-top:auto"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="bc">Portfolio <div class="dot4"></div><b>United Pacific</b></div>
+      <div style="margin-left:auto;font-size:11px;color:#6b7280">April 2026</div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="showTab('exec',this)">Executive summary</div>
+      <div class="tab" onclick="showTab('hvac',this)">HVAC detail</div>
+      <div class="tab" onclick="showTab('perf',this)">Top / worst performers</div>
+      <div class="tab" onclick="showTab('roi',this)">ROI & savings</div>
+      <div class="tab" onclick="showTab('refrig',this)">Refrigeration</div>
+      <div class="tab soon">Energy</div>
+      <div class="tab soon">Alarms</div>
+    </div>
+
+    <!-- EXECUTIVE SUMMARY -->
+    <div class="content" id="tab-exec">
+      <div class="slabel">Fleet status — April 2026</div>
+      <div class="g5">
+        <div class="fcard"><div class="fval">87</div><div class="flbl">Total stores</div><div class="fsub arr-fl" style="color:#6b7280">United Pacific portfolio</div></div>
+        <div class="fcard"><div class="fval" style="color:#10b981">71</div><div class="flbl">Full data availability</div><div class="fsub" style="color:#6b7280">100% uptime this month</div></div>
+        <div class="fcard"><div class="fval" style="color:#f59e0b">11</div><div class="flbl">Connectivity issues</div><div class="fsub" style="color:#6b7280">≥1 outage event this month</div></div>
+        <div class="fcard"><div class="fval">94.2<span style="font-size:14px;color:#6b7280">%</span></div><div class="flbl">Avg data availability</div><div class="fsub arr-up">▲ 1.1% vs March</div></div>
+        <div class="fcard" style="border-color:#fecaca;background:#fef9f9"><div class="fval" style="color:#ef4444">5</div><div class="flbl" style="color:#991b1b">Currently unreachable</div><div class="fsub" style="color:#991b1b">GW offline or lost conn. now</div></div>
+      </div>
+      <div class="slabel">ROI summary — portfolio</div>
+      <div class="g3">
+        <div class="fcard"><div class="fval" style="color:#10b981">47<span style="font-size:14px;color:#6b7280">%</span></div><div class="flbl">Sites with positive ROI</div><div class="fsub" style="color:#10b981">41 of 87 stores achieved</div></div>
+        <div class="fcard"><div class="fval" style="color:#2563eb">$1.24M</div><div class="flbl">Accumulated savings — portfolio</div><div class="fsub arr-up">▲ $48k vs March</div></div>
+        <div class="fcard"><div class="fval">$312k</div><div class="flbl">Savings this year (2026)</div><div class="fsub arr-up">▲ 12% vs 2025 YTD</div></div>
+      </div>
+      <div class="slabel">HVAC — % stores in compliance this month</div>
+      <div class="g4">
+        <div class="kcard"><div class="ktop"><div class="kttl">Runtime</div><span class="pill p-warn">Below target</span></div><div class="kval">81<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores within 8–18 h/day · target 85%</div><div class="kchg arr-up">▲ 2pp vs March</div></div>
+        <div class="kcard"><div class="ktop"><div class="kttl">Cooling ΔT</div><span class="pill p-ok">On target</span></div><div class="kval">94<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores within 16–22°F · target 85%</div><div class="kchg arr-up">▲ 1pp vs March</div></div>
+        <div class="kcard"><div class="ktop"><div class="kttl">Setpoint compliance</div><span class="pill p-err">Below target</span></div><div class="kval">72<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores ≥ 98% compliance · target 85%</div><div class="kchg arr-dn">▼ 4pp vs March</div></div>
+        <div class="kcard"><div class="ktop"><div class="kttl">Temp compliance</div><span class="pill p-ok">On target</span></div><div class="kval">91<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores ≥ 95% compliance · target 85%</div><div class="kchg arr-up">▲ 1pp vs March</div></div>
+      </div>
+      <div class="slabel">Refrigeration — % stores in compliance this month</div>
+      <div class="g2">
+        <div class="kcard"><div class="ktop"><div class="kttl">Walk-in coolers</div><span class="pill p-ok">On target</span></div><div class="kval">88<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores with avg cooler compliance ≥ 98% · range 34–38°F · target 85%</div><div class="kchg arr-up">▲ 2pp vs March</div></div>
+        <div class="kcard"><div class="ktop"><div class="kttl">Freezers</div><span class="pill p-warn">Below target</span></div><div class="kval">81<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores with avg freezer compliance ≥ 99% · range -10°F–0°F · target 85%</div><div class="kchg arr-dn">▼ 1pp vs March</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-ttl">HVAC trend — % stores in compliance</div>
+        <div class="legend">
+          <div class="li"><span class="ls" style="background:#2563eb"></span>Runtime (target 85%)</div>
+          <div class="li"><span class="ls" style="background:#0891b2"></span>Cooling ΔT (target 85%)</div>
+          <div class="li"><span class="ls" style="background:#7c3aed"></span>Setpoint (target 85%)</div>
+          <div class="li"><span class="ls" style="background:#0f766e"></span>Temp compliance (target 85%)</div>
+        </div>
+        <div style="position:relative;height:160px"><canvas id="hvacChart" role="img" aria-label="HVAC compliance trend">HVAC compliance trend 13 months.</canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-ttl">Refrigeration trend — % stores in compliance</div>
+        <div class="legend">
+          <div class="li"><span class="ls" style="background:#ea580c"></span>Coolers (target 85% · threshold ≥98%)</div>
+          <div class="li"><span class="ls" style="background:#0284c7"></span>Freezers (target 85% · threshold ≥99%)</div>
+        </div>
+        <div style="position:relative;height:140px"><canvas id="refrigChart" role="img" aria-label="Refrigeration compliance trend">Refrigeration compliance trend 13 months.</canvas></div>
+      </div>
+    </div>
+
+    <!-- HVAC DETAIL -->
+    <div class="content hidden" id="tab-hvac">
+      <div class="subtab-bar">
+        <div class="subtab active" onclick="showSub('sites',this)">By site</div>
+        <div class="subtab" onclick="showSub('devices',this)">By device</div>
+      </div>
+      <div class="filter-bar">
+        <span class="fltr-lbl">Filters:</span>
+        <select class="fsel" id="fType" onchange="renderActive()"><option value="all">All store types</option><option value="conv">Convenience only</option><option value="fuel">Conv. + fuel</option><option value="carwash">+ Car wash</option></select>
+        <select class="fsel" id="fHours" onchange="renderActive()"><option value="all">All schedules</option><option value="full">Full time (24h)</option><option value="other">Other hours</option></select>
+        <select class="fsel" id="fConn" onchange="renderActive()"><option value="all">All statuses</option><option value="ok">Full availability</option><option value="issues">With issues</option></select>
+        <select class="fsel" id="fCompliance" onchange="renderActive()"><option value="all">All compliance</option><option value="ok">All devices in range</option><option value="issues">At least one device out</option></select>
+        <span style="font-size:10px;color:#9ca3af;margin-left:auto">Click column headers to sort</span>
+      </div>
+      <div id="view-sites">
+        <div class="tbl-wrap">
+          <div class="tbl-hdr-bar">
+            <div>
+              <div class="tbl-ttl">HVAC performance by site — current month</div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">KPI values are averages across all HVAC devices · ⚠ indicates at least one device outside expected range</div>
+            </div>
+            <div class="tbl-cnt" id="siteCount">87 sites</div>
+          </div>
+          <div style="overflow-x:auto"><table class="dtbl" id="siteTbl"></table></div>
+        </div>
+      </div>
+      <div id="view-devices" style="display:none">
+        <div class="tbl-wrap">
+          <div class="tbl-hdr-bar">
+            <div>
+              <div class="tbl-ttl">HVAC performance by device — current month</div>
+              <div style="font-size:10px;color:#6b7280;margin-top:2px">Individual device readings · includes all HVAC equipment types</div>
+            </div>
+            <div class="tbl-cnt" id="devCount">204 devices</div>
+          </div>
+          <div style="overflow-x:auto"><table class="dtbl" id="devTbl"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP / WORST -->
+    <div class="content hidden" id="tab-perf">
+      <div class="filter-bar">
+        <span class="fltr-lbl">Filters:</span>
+        <select class="fsel" id="perfType" onchange="renderPerf()"><option value="all">All store types</option><option value="conv">Convenience only</option><option value="fuel">Convenience + fuel</option><option value="carwash">+ Car wash</option></select>
+        <select class="fsel" id="perfHours" onchange="renderPerf()"><option value="all">All schedules</option><option value="full">Full time (24h)</option><option value="other">Other hours</option></select>
+      </div>
+      <div class="slabel">Setpoint compliance</div><div class="g2" id="spPerf"></div>
+      <div class="slabel">Runtime</div><div class="g2" id="rtPerf"></div>
+      <div class="slabel">Cooling ΔT</div><div class="g2" id="dtPerf"></div>
+      <div class="slabel">Temperature compliance</div><div class="g2" id="tcPerf"></div>
+    </div>
+
+    <!-- ROI & SAVINGS -->
+    <div class="content hidden" id="tab-roi">
+      <div class="filter-bar">
+        <span class="fltr-lbl">Filters:</span>
+        <select class="fsel" id="roiType" onchange="renderRoi()"><option value="all">All store types</option><option value="conv">Convenience only</option><option value="fuel">Convenience + fuel</option><option value="carwash">+ Car wash</option></select>
+        <select class="fsel" id="roiHours" onchange="renderRoi()"><option value="all">All schedules</option><option value="full">Full time (24h)</option><option value="other">Other hours</option></select>
+        <select class="fsel" id="roiRoi" onchange="renderRoi()"><option value="all">All ROI statuses</option><option value="achieved">ROI achieved</option><option value="progress">In progress</option><option value="not">Not achieved</option></select>
+        <span style="font-size:10px;color:#9ca3af;margin-left:auto">Click column headers to sort</span>
+      </div>
+      <div class="g3" style="margin-bottom:10px">
+        <div class="fcard"><div class="fval" style="color:#10b981">47<span style="font-size:14px;color:#6b7280">%</span></div><div class="flbl">Sites with positive ROI</div><div class="fsub" style="color:#6b7280">41 of 87 stores</div></div>
+        <div class="fcard"><div class="fval" style="color:#2563eb">$1.24M</div><div class="flbl">Total accumulated savings</div><div class="fsub arr-up">▲ $48k vs March</div></div>
+        <div class="fcard"><div class="fval">28 mo</div><div class="flbl">Avg payback period</div><div class="fsub" style="color:#6b7280">across portfolio</div></div>
+      </div>
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;gap:24px">
+          <div style="position:relative;height:120px;width:120px;flex-shrink:0"><canvas id="donutChart" role="img" aria-label="ROI status">41 achieved, 30 in progress, 16 not achieved.</canvas></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0"></div><div><div style="font-weight:500;color:#111827">41 stores — ROI achieved</div><div style="font-size:10px;color:#6b7280">Savings exceeded investment</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:10px;height:10px;border-radius:50%;background:#3b82f6;flex-shrink:0"></div><div><div style="font-weight:500;color:#111827">30 stores — In progress</div><div style="font-size:10px;color:#6b7280">Within expected payback period</div></div></div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0"></div><div><div style="font-weight:500;color:#111827">16 stores — Not achieved</div><div style="font-size:10px;color:#6b7280">Past target period, below threshold</div></div></div>
+          </div>
+          <div style="flex:1;position:relative;height:120px">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">Monthly savings — portfolio ($k)</div>
+            <canvas id="savingsChart" role="img" aria-label="Monthly savings">Monthly savings trend.</canvas>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-hdr-bar"><div class="tbl-ttl">ROI & savings by store</div><div class="tbl-cnt" id="roiCount">87 stores</div></div>
+        <div style="overflow-x:auto"><table class="dtbl" id="roiTbl"></table></div>
+      </div>
+    </div>
+
+    <!-- REFRIGERATION -->
+    <div class="content hidden" id="tab-refrig">
+      <div class="filter-bar">
+        <span class="fltr-lbl">Filters:</span>
+        <select class="fsel" id="refType" onchange="renderRefrig()"><option value="all">All store types</option><option value="conv">Convenience only</option><option value="fuel">Convenience + fuel</option><option value="carwash">+ Car wash</option></select>
+        <select class="fsel" id="refHours" onchange="renderRefrig()"><option value="all">All schedules</option><option value="full">Full time (24h)</option><option value="other">Other hours</option></select>
+        <select class="fsel" id="refStatus" onchange="renderRefrig()"><option value="all">All compliance</option><option value="ok">In compliance</option><option value="issues">Below threshold</option></select>
+        <span style="font-size:10px;color:#9ca3af;margin-left:auto">Click column headers to sort</span>
+      </div>
+      <div class="g2" style="margin-bottom:10px">
+        <div class="kcard"><div class="ktop"><div class="kttl">Walk-in coolers</div><span class="pill p-ok">On target</span></div><div class="kval">88<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores with avg compliance ≥ 98% · range 34–38°F</div><div class="kchg arr-up">▲ 2pp vs March</div></div>
+        <div class="kcard"><div class="ktop"><div class="kttl">Freezers</div><span class="pill p-warn">Below target</span></div><div class="kval">81<span style="font-size:13px;color:#6b7280">%</span></div><div class="ksub">stores with avg compliance ≥ 99% · range -10°F–0°F</div><div class="kchg arr-dn">▼ 1pp vs March</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-hdr-bar"><div class="tbl-ttl">Refrigeration compliance by store</div><div class="tbl-cnt" id="refCount">87 stores</div></div>
+        <div style="overflow-x:auto"><table class="dtbl" id="refTbl"></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function showTab(name,el){document.querySelectorAll('.tab:not(.soon)').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.content').forEach(c=>c.classList.add('hidden'));document.getElementById('tab-'+name).classList.remove('hidden');if(name==='hvac'&&!window.hvacBuilt){buildHvacData();renderSites();window.hvacBuilt=true;}if(name==='perf'&&!window.perfBuilt){renderPerf();window.perfBuilt=true;}if(name==='roi'&&!window.roiBuilt){renderRoi();buildRoiCharts();window.roiBuilt=true;}if(name==='refrig'&&!window.refrigBuilt){renderRefrig();window.refrigBuilt=true;}}
+
+const MONTHS13=['Apr\'25','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan\'26','Feb','Mar','Apr\'26'];
+const TARGETS={runtime:85,dt:85,setpoint:85,temp:85,cooler:85,freezer:85};
+const THRESHOLDS={runtime:'8–18 h/day',dt:'16–22°F',setpoint:'≥ 98%',temp:'≥ 95%',cooler:'≥ 98%',freezer:'≥ 99%'};
+const makeTooltip=()=>({callbacks:{label:ctx=>{if(ctx.dataset.label==='_')return null;const key=ctx.dataset.key;return ` ${ctx.dataset.label}: ${ctx.parsed.y}% — target ${TARGETS[key]}% (threshold ${THRESHOLDS[key]})`}}});
+
+new Chart(document.getElementById('hvacChart'),{type:'line',data:{labels:MONTHS13,datasets:[{label:'Runtime',key:'runtime',data:[74,76,75,78,80,79,77,78,80,79,80,79,81],borderColor:'#2563eb',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3},{label:'Cooling ΔT',key:'dt',data:[88,89,90,91,92,91,92,93,93,92,93,93,94],borderColor:'#0891b2',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3},{label:'Setpoint',key:'setpoint',data:[80,81,80,79,78,77,76,75,76,76,75,76,72],borderColor:'#7c3aed',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3},{label:'Temp compliance',key:'temp',data:[86,87,87,88,89,88,89,90,90,89,90,90,91],borderColor:'#0f766e',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:makeTooltip()},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#6b7280',maxRotation:45,autoSkip:false},border:{display:false}},y:{min:60,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#6b7280',callback:v=>v+'%'},border:{display:false}}}}});
+new Chart(document.getElementById('refrigChart'),{type:'line',data:{labels:MONTHS13,datasets:[{label:'Coolers',key:'cooler',data:[82,83,84,85,86,85,86,87,87,86,87,86,88],borderColor:'#ea580c',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3},{label:'Freezers',key:'freezer',data:[79,80,80,81,82,81,82,83,83,82,82,82,81],borderColor:'#0284c7',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:makeTooltip()},scales:{x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#6b7280',maxRotation:45,autoSkip:false},border:{display:false}},y:{min:60,max:100,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#6b7280',callback:v=>v+'%'},border:{display:false}}}}});
+
+function buildRoiCharts(){new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels:['Achieved','In progress','Not achieved'],datasets:[{data:[41,30,16],backgroundColor:['#10b981','#3b82f6','#ef4444'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}`}}}}});new Chart(document.getElementById('savingsChart'),{type:'bar',data:{labels:['Nov','Dec','Jan','Feb','Mar','Apr'],datasets:[{label:'Savings',data:[38,42,44,46,47,48],backgroundColor:'#bfdbfe',borderColor:'#3b82f6',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` $${ctx.parsed.y}k`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#6b7280'},border:{display:false}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:9},color:'#6b7280',callback:v=>'$'+v+'k'},border:{display:false}}}}});}
+
+const TYPES=['conv','fuel','fuel','carwash','conv','fuel','carwash','conv','fuel','conv'];
+const HOURS=['full','full','other','full','full','other','full','full','full','other'];
+const NAMES=['Store #214 — San Diego','Store #117 — Los Angeles','Store #355 — Bakersfield','Store #212 — Fresno','Store #275 — Sacramento','Store #683 — Riverside','Store #191 — Stockton','Store #236 — Oakland','Store #249 — Long Beach','Store #277 — San Jose','Store #256 — Anaheim','Store #219 — Irvine','Store #233 — Chula Vista','Store #625 — Modesto','Store #696 — Oxnard'];
+const EQ_TYPES=['RTU','RTU','RTU','AHU','CU'];
+const EQ_NAMES=['RTU-1','RTU-2','RTU-3','AHU-1','CU-1'];
+
+let allDevices=[],allSites=[],allStores=[];
+
+function buildHvacData(){
+  for(let i=0;i<87;i++){
+    const nDevices=i%3===0?3:i%5===0?1:2;
+    const siteName=i<NAMES.length?NAMES[i]:`Store #${500+i} — CA`;
+    const type=TYPES[i%TYPES.length],hours=HOURS[i%HOURS.length];
+    const connMonth=i<71?'ok':'issues',connNow=i<82?'ok':(i<84?'lost':'off');
+    const dataAvail=connMonth==='ok'?100:Math.round(70+Math.abs(Math.sin(i*5))*28);
+    const siteDevs=[];
+    for(let d=0;d<nDevices;d++){
+      const seed=(i*10)+d;
+      const dev={siteId:i,siteName,type,hours,connMonth,connNow,dataAvail,
+        device:EQ_NAMES[d]||`DEV-${d+1}`,eqType:EQ_TYPES[d%EQ_TYPES.length]||'RTU',
+        runtime:parseFloat((6+Math.abs(Math.sin(seed*1.3))*16).toFixed(1)),
+        dt:parseFloat((10+Math.abs(Math.sin(seed*2.1))*17).toFixed(1)),
+        sp:Math.round(65+Math.abs(Math.sin(seed*3.2))*35),
+        tc:Math.round(82+Math.abs(Math.sin(seed*4.1))*18)};
+      siteDevs.push(dev);allDevices.push(dev);
+    }
+    const avgRt=parseFloat((siteDevs.reduce((a,d)=>a+d.runtime,0)/siteDevs.length).toFixed(1));
+    const avgDt=parseFloat((siteDevs.reduce((a,d)=>a+d.dt,0)/siteDevs.length).toFixed(1));
+    const avgSp=Math.round(siteDevs.reduce((a,d)=>a+d.sp,0)/siteDevs.length);
+    const avgTc=Math.round(siteDevs.reduce((a,d)=>a+d.tc,0)/siteDevs.length);
+    allSites.push({id:i,siteName,type,hours,connMonth,connNow,dataAvail,nDevices,
+      avgRt,avgDt,avgSp,avgTc,
+      rtWarn:siteDevs.some(d=>d.runtime<8||d.runtime>18),
+      dtWarn:siteDevs.some(d=>d.dt<14||d.dt>24),
+      spWarn:siteDevs.some(d=>d.sp<98),
+      tcWarn:siteDevs.some(d=>d.tc<95),
+      get hasAnyWarn(){return this.rtWarn||this.dtWarn||this.spWarn||this.tcWarn;}});
+  }
+}
+
+for(let i=0;i<87;i++){
+  const months=Math.round(6+(Math.abs(Math.sin(i*2.1))*36));
+  const invest=Math.round(8000+Math.abs(Math.sin(i*1.3))*7000);
+  const savingsPerMonth=Math.round(300+Math.abs(Math.sin(i*3.2))*400);
+  const accSavings=savingsPerMonth*months;
+  const roiStatus=accSavings>=invest?'achieved':(months<24?'progress':'not');
+  const coolerComp=Math.round(94+(Math.sin(i*2.7)*0.5+0.5)*6);
+  const freezerComp=Math.round(93+(Math.sin(i*3.9)*0.5+0.5)*7);
+  allStores.push({id:i,name:i<NAMES.length?NAMES[i]:`Store #${500+i} — CA`,
+    type:TYPES[i%TYPES.length],hours:HOURS[i%HOURS.length],
+    connMonth:i<71?'ok':'issues',connNow:i<82?'ok':(i<84?'lost':'off'),
+    dataAvail:i<71?100:Math.round(70+Math.abs(Math.sin(i*5))*28),
+    runtime:parseFloat((8+(Math.abs(Math.sin(i*1.7))*12)).toFixed(1)),
+    dt:parseFloat((14+(Math.abs(Math.sin(i*2.3))*12)).toFixed(1)),
+    sp:Math.round(68+(Math.abs(Math.sin(i*3.1))*30)),
+    tc:Math.round(85+(Math.abs(Math.sin(i*4.5))*14)),
+    coolerComp,freezerComp,wicCount:i%3===0?2:1,
+    coolerOk:coolerComp>=98,freezerOk:freezerComp>=99,
+    installDate:`${2022+Math.floor(i/30)}-${String((i%12)+1).padStart(2,'0')}-01`,
+    months,invest,accSavings,savingsPerMonth,roiStatus,payback:Math.round(invest/savingsPerMonth)});}
+
+function kpiColor(val,type){
+  if(type==='rt')return val>=8&&val<=18?'ok':val>18?'err':'warn';
+  if(type==='dt')return val>=14&&val<=24?'ok':val<10?'err':'warn';
+  if(type==='sp')return val>=98?'ok':val>=90?'warn':'err';
+  if(type==='tc')return val>=95?'ok':val>=90?'warn':'err';
+}
+function kpiChip(val,type,warn){
+  const c=kpiColor(val,type);
+  const unit=type==='rt'?'h':type==='dt'?'°F':'%';
+  const w=warn?'<span style="color:#f59e0b;margin-left:3px">⚠</span>':'';
+  return `<span class="chip c-${c}">${val}${unit}</span>${w}`;
+}
+function connBadge(cm,cn){
+  const now=cn==='ok'?'<span style="font-size:10px;color:#065f46"><span class="cdot" style="background:#10b981"></span>Online</span>':cn==='lost'?'<span style="font-size:10px;color:#92400e"><span class="cdot" style="background:#f59e0b"></span>Lost conn.</span>':'<span style="font-size:10px;color:#991b1b"><span class="cdot" style="background:#ef4444"></span>Offline</span>';
+  const mo=cm==='ok'?'<span style="font-size:10px;color:#065f46">Full availability</span>':'<span style="font-size:10px;color:#92400e">Issues this month</span>';
+  return `${now}<div style="margin-top:2px">${mo}</div>`;}
+function eqBadge(t){return t==='RTU'?'<span class="chip c-blue">RTU</span>':t==='AHU'?'<span class="chip c-purple">AHU</span>':'<span class="chip c-gray">CU</span>';}
+function roiBadge(s){return s==='achieved'?'<span class="chip c-ok">Achieved</span>':s==='progress'?'<span class="chip c-blue">In progress</span>':'<span class="chip c-err">Not achieved</span>';}
+function fmtMoney(v){return '$'+v.toLocaleString()}
+
+let currentSub='sites',siteSort={col:'avgSp',dir:-1},devSort={col:'sp',dir:-1};
+
+function showSub(name,el){
+  document.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  currentSub=name;
+  document.getElementById('view-sites').style.display=name==='sites'?'block':'none';
+  document.getElementById('view-devices').style.display=name==='devices'?'block':'none';
+  renderActive();}
+
+function renderActive(){if(currentSub==='sites')renderSites();else renderDevices();}
+
+function getF(){return{type:document.getElementById('fType').value,hours:document.getElementById('fHours').value,conn:document.getElementById('fConn').value,compliance:document.getElementById('fCompliance').value};}
+
+function renderSites(){
+  if(!allSites.length)return;
+  const f=getF();
+  let data=allSites.filter(s=>(f.type==='all'||s.type===f.type)&&(f.hours==='all'||s.hours===f.hours)&&(f.conn==='all'||(f.conn==='ok'&&s.connMonth==='ok')||(f.conn==='issues'&&s.connMonth!=='ok'))&&(f.compliance==='all'||(f.compliance==='ok'&&!s.hasAnyWarn)||(f.compliance==='issues'&&s.hasAnyWarn)));
+  data.sort((a,b)=>(a[siteSort.col]>b[siteSort.col]?1:-1)*siteSort.dir);
+  document.getElementById('siteCount').textContent=data.length+' sites';
+  const cols=[{k:'siteName',l:'Store'},{k:'connMonth',l:'Connectivity'},{k:'dataAvail',l:'Data avail. ↕'},{k:'type',l:'Type'},{k:'hours',l:'Schedule'},{k:'nDevices',l:'HVAC devices ↕'},{k:'avgRt',l:'Runtime ↕'},{k:'avgDt',l:'Cooling ΔT ↕'},{k:'avgSp',l:'Setpoint compl. ↕'},{k:'avgTc',l:'Temp compl. ↕'}];
+  let html='<thead><tr>'+cols.map(c=>`<th class="${siteSort.col===c.k?'sorted':''}" onclick="sortSites('${c.k}')">${c.l}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(s=>{
+    const tl=s.type==='conv'?'Conv. only':s.type==='fuel'?'Conv. + fuel':'Conv.+fuel+CW';
+    const ac=s.dataAvail===100?'#065f46':s.dataAvail>=90?'#92400e':'#991b1b';
+    html+=`<tr><td style="font-weight:500;color:#111827">${s.siteName}</td><td>${connBadge(s.connMonth,s.connNow)}</td><td style="font-weight:500;color:${ac}">${s.dataAvail}%</td><td style="color:#6b7280;font-size:11px">${tl}</td><td><span class="chip c-gray">${s.hours==='full'?'24h':'Other'}</span></td><td style="text-align:center;font-weight:500;color:#111827">${s.nDevices}</td><td>${kpiChip(s.avgRt,'rt',s.rtWarn)}</td><td>${kpiChip(s.avgDt,'dt',s.dtWarn)}</td><td>${kpiChip(s.avgSp,'sp',s.spWarn)}</td><td>${kpiChip(s.avgTc,'tc',s.tcWarn)}</td></tr>`;});
+  document.getElementById('siteTbl').innerHTML=html+'</tbody>';}
+function sortSites(col){if(siteSort.col===col)siteSort.dir*=-1;else{siteSort.col=col;siteSort.dir=-1;}renderSites();}
+
+function renderDevices(){
+  if(!allDevices.length)return;
+  const f=getF();
+  let data=allDevices.filter(d=>(f.type==='all'||d.type===f.type)&&(f.hours==='all'||d.hours===f.hours)&&(f.conn==='all'||(f.conn==='ok'&&d.connMonth==='ok')||(f.conn==='issues'&&d.connMonth!=='ok'))&&(f.compliance==='all'||(f.compliance==='ok'&&kpiColor(d.runtime,'rt')==='ok'&&kpiColor(d.dt,'dt')==='ok'&&kpiColor(d.sp,'sp')==='ok'&&kpiColor(d.tc,'tc')==='ok')||(f.compliance==='issues'&&(kpiColor(d.runtime,'rt')!=='ok'||kpiColor(d.dt,'dt')!=='ok'||kpiColor(d.sp,'sp')!=='ok'||kpiColor(d.tc,'tc')!=='ok'))));
+  data.sort((a,b)=>(a[devSort.col]>b[devSort.col]?1:-1)*devSort.dir);
+  document.getElementById('devCount').textContent=data.length+' devices';
+  const cols=[{k:'siteName',l:'Store'},{k:'device',l:'Device ↕'},{k:'eqType',l:'Eq. type ↕'},{k:'connMonth',l:'Connectivity'},{k:'dataAvail',l:'Data avail. ↕'},{k:'runtime',l:'Runtime ↕'},{k:'dt',l:'Cooling ΔT ↕'},{k:'sp',l:'Setpoint compl. ↕'},{k:'tc',l:'Temp compl. ↕'}];
+  let html='<thead><tr>'+cols.map(c=>`<th class="${devSort.col===c.k?'sorted':''}" onclick="sortDevs('${c.k}')">${c.l}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(d=>{
+    const ac=d.dataAvail===100?'#065f46':d.dataAvail>=90?'#92400e':'#991b1b';
+    html+=`<tr><td style="font-weight:500;color:#111827">${d.siteName}</td><td style="font-weight:500;color:#374151">${d.device}</td><td>${eqBadge(d.eqType)}</td><td>${connBadge(d.connMonth,d.connNow)}</td><td style="font-weight:500;color:${ac}">${d.dataAvail}%</td><td>${kpiChip(d.runtime,'rt',false)}</td><td>${kpiChip(d.dt,'dt',false)}</td><td>${kpiChip(d.sp,'sp',false)}</td><td>${kpiChip(d.tc,'tc',false)}</td></tr>`;});
+  document.getElementById('devTbl').innerHTML=html+'</tbody>';}
+function sortDevs(col){if(devSort.col===col)devSort.dir*=-1;else{devSort.col=col;devSort.dir=-1;}renderDevices();}
+
+let roiSort={col:'accSavings',dir:-1};
+function renderRoi(){
+  const t=document.getElementById('roiType').value,h=document.getElementById('roiHours').value,r=document.getElementById('roiRoi').value;
+  let data=allStores.filter(s=>(t==='all'||s.type===t)&&(h==='all'||s.hours===h)&&(r==='all'||s.roiStatus===r));
+  data.sort((a,b)=>(a[roiSort.col]>b[roiSort.col]?1:-1)*roiSort.dir);
+  document.getElementById('roiCount').textContent=data.length+' stores';
+  const cols=[{k:'name',l:'Store'},{k:'installDate',l:'Install date ↕'},{k:'months',l:'Months ↕'},{k:'invest',l:'Investment ↕'},{k:'accSavings',l:'Accum. savings ↕'},{k:'savingsPerMonth',l:'Savings/mo ↕'},{k:'payback',l:'Payback (mo) ↕'},{k:'roiStatus',l:'ROI status ↕'}];
+  let html='<thead><tr>'+cols.map(c=>`<th class="${roiSort.col===c.k?'sorted':''}" onclick="sortRoi('${c.k}')">${c.l}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(s=>{
+    const pct=Math.min(100,Math.round((s.accSavings/s.invest)*100));
+    const bc=s.roiStatus==='achieved'?'#10b981':s.roiStatus==='progress'?'#3b82f6':'#ef4444';
+    html+=`<tr><td style="font-weight:500;color:#111827">${s.name}</td><td style="color:#6b7280">${s.installDate}</td><td>${s.months} mo</td><td>${fmtMoney(s.invest)}</td><td><div style="display:flex;align-items:center;gap:5px"><div class="progress-wrap"><div class="progress-fill" style="width:${pct}%;background:${bc}"></div></div><span style="font-weight:500;color:${bc}">${fmtMoney(s.accSavings)}</span></div></td><td>${fmtMoney(s.savingsPerMonth)}/mo</td><td>${s.payback} mo</td><td>${roiBadge(s.roiStatus)}</td></tr>`;});
+  document.getElementById('roiTbl').innerHTML=html+'</tbody>';}
+function sortRoi(col){if(roiSort.col===col)roiSort.dir*=-1;else{roiSort.col=col;roiSort.dir=-1;}renderRoi();}
+
+let refSort={col:'coolerComp',dir:-1};
+function renderRefrig(){
+  const t=document.getElementById('refType').value,h=document.getElementById('refHours').value,s=document.getElementById('refStatus').value;
+  let data=allStores.filter(st=>(t==='all'||st.type===t)&&(h==='all'||st.hours===h)&&(s==='all'||(s==='ok'&&st.coolerOk&&st.freezerOk)||(s==='issues'&&(!st.coolerOk||!st.freezerOk))));
+  data.sort((a,b)=>(a[refSort.col]>b[refSort.col]?1:-1)*refSort.dir);
+  document.getElementById('refCount').textContent=data.length+' stores';
+  const cols=[{k:'name',l:'Store'},{k:'type',l:'Type'},{k:'wicCount',l:'WIC units ↕'},{k:'coolerComp',l:'Cooler compliance ↕'},{k:'freezerComp',l:'Freezer compliance ↕'},{k:'coolerOk',l:'Cooler status'},{k:'freezerOk',l:'Freezer status'}];
+  let html='<thead><tr>'+cols.map(c=>`<th class="${refSort.col===c.k?'sorted':''}" onclick="sortRef('${c.k}')">${c.l}</th>`).join('')+'</tr></thead><tbody>';
+  data.forEach(st=>{
+    const tl=st.type==='conv'?'Conv. only':st.type==='fuel'?'Conv. + fuel':'Conv.+fuel+CW';
+    html+=`<tr><td style="font-weight:500;color:#111827">${st.name}</td><td style="color:#6b7280;font-size:11px">${tl}</td><td style="text-align:center">${st.wicCount}</td><td><span class="chip ${st.coolerComp>=98?'c-ok':st.coolerComp>=95?'c-warn':'c-err'}">${st.coolerComp}%</span><div style="font-size:10px;color:#6b7280;margin-top:2px">34–38°F · ≥98%</div></td><td><span class="chip ${st.freezerComp>=99?'c-ok':st.freezerComp>=96?'c-warn':'c-err'}">${st.freezerComp}%</span><div style="font-size:10px;color:#6b7280;margin-top:2px">-10°F–0°F · ≥99%</div></td><td>${st.coolerOk?'<span class="chip c-ok">In compliance</span>':'<span class="chip c-err">Below threshold</span>'}</td><td>${st.freezerOk?'<span class="chip c-ok">In compliance</span>':'<span class="chip c-err">Below threshold</span>'}</td></tr>`;});
+  document.getElementById('refTbl').innerHTML=html+'</tbody>';}
+function sortRef(col){if(refSort.col===col)refSort.dir*=-1;else{refSort.col=col;refSort.dir=-1;}renderRefrig();}
+
+function renderPerf(){
+  const t=document.getElementById('perfType').value,h=document.getElementById('perfHours').value;
+  const data=allStores.filter(s=>(t==='all'||s.type===t)&&(h==='all'||s.hours===h));
+  const kpis=[{id:'spPerf',key:'sp',label:'Setpoint compliance',unit:'%',barFn:v=>v},{id:'rtPerf',key:'runtime',label:'Runtime',unit:'h',barFn:v=>Math.min(100,(v/22)*100)},{id:'dtPerf',key:'dt',label:'Cooling ΔT',unit:'°F',barFn:v=>Math.min(100,(v/27)*100)},{id:'tcPerf',key:'tc',label:'Temp compliance',unit:'%',barFn:v=>v}];
+  kpis.forEach(kpi=>{
+    const sorted=[...data].sort((a,b)=>b[kpi.key]-a[kpi.key]);
+    const top5=sorted.slice(0,5),bot5=sorted.slice(-5).reverse();
+    function buildList(stores,isTop){return stores.map((st,idx)=>{const val=st[kpi.key],bw=Math.round(kpi.barFn(val));const bc=isTop?'#10b981':'#ef4444',vc=isTop?'#065f46':'#991b1b';return `<div style="display:flex;align-items:center;padding:7px 12px;border-bottom:1px solid #f9fafb;gap:8px"><div style="width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;background:${isTop?'#d1fae5':'#fee2e2'};color:${vc};flex-shrink:0">${idx+1}</div><div style="font-size:11px;font-weight:500;color:#111827;flex:1;overflow:hidden;text-overflow:ellipsis">${st.name.split(' — ')[0]} <span style="font-size:10px;color:#9ca3af">${st.name.split(' — ')[1]||''}</span></div><div style="width:60px;height:4px;background:#f3f4f6;border-radius:2px;overflow:hidden;flex-shrink:0"><div style="width:${bw}%;height:100%;background:${bc};border-radius:2px"></div></div><div style="font-size:12px;font-weight:500;color:${vc};flex-shrink:0">${val}${kpi.unit}</div></div>`;}).join('');}
+    document.getElementById(kpi.id).innerHTML=`<div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden"><div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500;color:#111827">Top 5</span><span style="font-size:10px;color:#6b7280">${kpi.label}</span></div>${buildList(top5,true)}</div><div style="background:#fff;border-radius:8px;border:1px solid #e5e7eb;overflow:hidden"><div style="padding:10px 12px;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:500;color:#111827">Worst 5</span><span style="font-size:10px;color:#6b7280">${kpi.label}</span></div>${buildList(bot5,false)}</div>`;});}
+</script>
+</body>
+</html>
